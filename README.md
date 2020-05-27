@@ -1,6 +1,6 @@
 # Wordpress Web Vitals Plugin
 
-Following our initial blog post on (Web Vitals for SEO's)[https://salt.agency/blog/web-vitals-data-visualising-guide/] and guide of how it can be used withing Google Analytics, we have gone ahead and written up a Web Vitals Wordpress plugin to speed up the process.
+Following our initial blog post on [Web Vitals for SEO's](https://salt.agency/blog/web-vitals-data-visualising-guide/) and guide of how it can be used withing Google Analytics, we have gone ahead and written up a Web Vitals Wordpress plugin to speed up the process.
 
 ## Featuers
 - Loading of plugin through
