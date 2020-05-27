@@ -4,8 +4,8 @@ Tags: ga, analytics, tagmanager, gtag, performance, webvitals
 Requires at least: 5.0
 Requires PHP: 7.1
 Stable tag: trunk
-License: GPLv3 or later
-License URI: https://www.gnu.org/licenses/gpl-3.0.html
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Send [Web Vitals](https://web.dev/vitals/) to Google Analytics.
 
