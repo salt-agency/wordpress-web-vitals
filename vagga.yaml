@@ -1,0 +1,222 @@
+containers:
+  app:
+    setup:
+    - !Alpine v3.12
+    - !Repo community
+    - !Install
+      - ca-certificates
+      - apache2-proxy
+      - curl
+      - openssl
+      - bash
+      - subversion
+      - git
+      - mysql
+      - mysql-client
+    - !Install ["php7-fpm", "php7-curl", "php7-openssl", "php7-mbstring", "php7-tokenizer", "php7-xmlreader", "php7-xmlwriter", "php7-xml", "php7-simplexml", "php7-json", "php7-session", "php7-dom", "php7-phar", "php7-gd", "php7-json", "php7-posix", "php7-ctype", "php7-zip", "php7-zlib", "php7-pdo", "php7-pdo_mysql", "php7-mysqli", "php7-mysqlnd", "php7-iconv", "php7-opcache"]
+    - !Install ["phpmyadmin"]
+    - !Sh |
+        chown -R nobody:nobody /etc/phpmyadmin
+        sed -i "s#\$cfg\['Servers'\]\[\$i\]\['auth_type'\]\ =\ 'cookie';#\$cfg['Servers'][\$i]['auth_type']\ =\ 'config';#" /etc/phpmyadmin/config.inc.php
+        sed -i "s#\$cfg\['Servers'\]\[\$i\]\['host'\]\ =\ 'localhost';#\$cfg['Servers'][\$i]['host']\ =\ '127.0.0.1';#" /etc/phpmyadmin/config.inc.php
+        sed -i "s#\$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\]\ =\ false;#\$cfg['Servers'][\$i]['AllowNoPassword']\ =\ true;\n\$cfg['Servers'][\$i]['user']\ =\ 'root';\n\$cfg['Servers'][\$i]['password']\ =\ '';#" /etc/phpmyadmin/config.inc.php
+        export WP_CLI_URL=https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        (mkdir -p /usr/share/wp-cli && cd /usr/share/wp-cli && \
+          curl --fail -L -sS -O $WP_CLI_URL && \
+          chmod +x wp-cli.phar && \
+          mv wp-cli.phar /usr/local/bin/wp
+        )
+        export PHPUNIT_VERSION=7.5.8
+        (mkdir -p /usr/share/phpunit && cd /usr/share/phpunit && \
+          curl --fail -L -sS -o phpunit.phar https://phar.phpunit.de/phpunit-$PHPUNIT_VERSION.phar && \
+          chmod +x phpunit.phar && \
+          mv phpunit.phar /usr/local/bin/phpunit
+        )
+        export DOCUMENT_ROOT=/
+        sed -i "s/LoadModule\ mpm_prefork_module modules\/mod_mpm_prefork.so/#LoadModule\ mpm_prefork_module modules\/mod_mpm_prefork.so/" /etc/apache2/httpd.conf
+        sed -i "s/#LoadModule\ mpm_event_module modules\/mod_mpm_event.so/LoadModule\ mpm_event_module modules\/mod_mpm_event.so/" /etc/apache2/httpd.conf
+        sed -i "s/#LoadModule\ rewrite_module/LoadModule\ rewrite_module/" /etc/apache2/httpd.conf
+        sed -i "s/#LoadModule\ session_module/LoadModule\ session_module/" /etc/apache2/httpd.conf
+        sed -i "s/#LoadModule\ session_cookie_module/LoadModule\ session_cookie_module/" /etc/apache2/httpd.conf
+        sed -i "s/#LoadModule\ session_crypto_module/LoadModule\ session_crypto_module/" /etc/apache2/httpd.conf
+        sed -i "s/#LoadModule\ deflate_module/LoadModule\ deflate_module/" /etc/apache2/httpd.conf
+        sed -i "s#^Listen .*#Listen 8080#g" /etc/apache2/httpd.conf
+        sed -i "s# logs/# /var/log/apache2/#g" /etc/apache2/httpd.conf
+        sed -i "s#^DocumentRoot \".*#DocumentRoot \"/work${DOCUMENT_ROOT:-}\"#g" /etc/apache2/httpd.conf
+        sed -i "s#/var/www/localhost/htdocs#/work${DOCUMENT_ROOT:-}#" /etc/apache2/httpd.conf
+        printf "\n<Directory \"/work${DOCUMENT_ROOT:-}\">\n\tAllowOverride All\n</Directory>\n" >> /etc/apache2/httpd.conf
+        printf "\nDirectoryIndex index.php\n" >> /etc/apache2/httpd.conf
+        printf "<?php phpinfo();" >> /var/www/info.php
+        printf "\nProxyPassMatch ^/info.php$ fcgi://127.0.0.1:9000/var/www/info.php\n" >> /etc/apache2/httpd.conf
+        printf "\nProxyPassMatch ^/phpmyadmin/(.*\.php(/.*)?)$ fcgi://127.0.0.1:9000/usr/share/webapps/phpmyadmin/\$1\n" >> /etc/apache2/httpd.conf
+        printf "\nProxyPassMatch ^/(.*\.php(/.*)?)$ fcgi://127.0.0.1:9000/work${DOCUMENT_ROOT:-}/\$1\n" >> /etc/apache2/httpd.conf
+        printf "\nphp_flag[display_errors] = off\n" >> /etc/php7/php-fpm.d/www.conf
+        printf "\nphp_admin_value[error_log] = /var/log/php7/\$pool.error.log\n" >> /etc/php7/php-fpm.d/www.conf
+        printf "\nclear_env = no\n" >> /etc/php7/php-fpm.d/www.conf
+    - !Sh |
+        ln -s /usr/sbin/php-fpm7 /usr/sbin/php-fpm
+    - !EnsureDir /var/lib/mysql
+    - !EnsureDir /var/log
+    - !ComposerConfig
+      install_runtime: false
+      keep_composer: true
+      runtime_exe: /usr/bin/php7
+    - !ComposerDependencies
+    environ: &env
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATA_DIR: /var/lib/mysql
+    volumes:
+      /var/log: !Persistent
+        name: logs
+        init-command: _log-init
+      /var/tmp: !Tmpfs
+        mode: 0o777
+      /run: !Tmpfs
+        size: 1024Mi
+        subdirs:
+          apache2: { mode: 0o777 }
+          mysqld: { mode: 0o777 }
+
+commands:
+  _mysql-init: !Command
+      description: Init MySQL data volume
+      container: app
+      environ: &db_credentials
+        DB_DATABASE: wptester
+        DB_USERNAME: wptester
+        DB_PASSWORD: wptester
+      run: |
+        set -e
+        mysql_install_db --datadir=$DB_DATA_DIR
+        mysqld --skip-networking --user=root --datadir=$DB_DATA_DIR &
+        while [ ! -S /run/mysqld/mysqld.sock ]; do sleep 0.2; done
+        mysqladmin -u root create $DB_DATABASE
+        mysql -u root -e "CREATE USER $DB_USERNAME@localhost IDENTIFIED BY '$DB_PASSWORD';"
+        mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO $DB_USERNAME@localhost;"
+        mysql -u root -e "FLUSH PRIVILEGES;"
+        mysqladmin -u root shutdown
+
+  _log-init: !Command
+      description: Init log volume
+      container: app
+      run: |
+        set -e
+        mkdir -p /var/log/apache2
+        mkdir -p /var/log/php7
+        chmod -R 0777 /var/log
+
+  run: !Supervise
+    description: "run development stack"
+    children:
+      mysql-server: !Command
+        description: run MySQL server
+        container: app
+        _expose-ports: [3306]
+        volumes:
+          /var/lib/mysql: !Persistent
+            name: mysql
+            init-command: _mysql-init
+        run: |
+            exec mysqld --user=root \
+              --datadir=$DB_DATA_DIR \
+              --bind-address=$DB_HOST --port=$DB_PORT \
+              --skip-networking=0 --gdb
+      apache2: !Command
+        description: run Apache2 Web server
+        container: app
+        _expose-ports: [8080]
+        run: |
+          httpd -v
+          exec httpd -D FOREGROUND
+      php-fpm: !Command
+        description: run php-fpm
+        container: app
+        _expose-ports: [9000]
+        run: |
+          php-fpm -v
+          exec php-fpm -F
+      #watch: !Command
+      #  description: Watch and rebuild assets
+      #  container: build
+      #  run: |
+      #    yarn --modules-folder=/usr/lib/node_modules grunt
+      #    yarn --modules-folder=/usr/lib/node_modules grunt watch
+        
+  sh: !Command
+    description: Run shell inside the container
+    container: app
+    run: /bin/sh
+
+  db-seed-dump: !Command
+    description: Dump database
+    container: app
+    run: |
+      mysqldump --host=127.0.0.1 --port=3306 $DB_DATABASE | gzip -9 > /work/dev/db_seed/wordpress-latest.sql.gz
+      echo "Latest seed /work/dev/db_seed/wordpress-latest.sql.gz"
+
+  db-seed-reset: !Command
+    description: Reset database to latest seed
+    container: app
+    run: |
+      echo "Dropping database $DB_DATABASE"
+      mysql --host=$DB_HOST --port=$DB_PORT -u root -e "DROP DATABASE $DB_DATABASE"
+      echo "Creating database $DB_DATABASE"
+      mysqladmin --host=$DB_HOST --port=$DB_PORT -u root create $DB_DATABASE
+      mysql --host=$DB_HOST --port=$DB_PORT -u root -e "GRANT ALL PRIVILEGES ON $DB_DATABASE.* TO $DB_USERNAME@localhost;"
+      mysql --host=$DB_HOST --port=$DB_PORT -u root -e "FLUSH PRIVILEGES;"
+      if test -f "/work/dev/db_seed/wordpress-latest.sql.gz"; then
+        echo "Seeding wordpress-latest"
+        gzip -d < /work/dev/db_seed/wordpress-latest.sql.gz | mysql --host=$DB_HOST --port=$DB_PORT -u root $DB_DATABASE
+      else
+        if test -f "/work/dev/db_seed/wordpress-initial.sql.gz"; then
+          echo "Seeding wordpress-initial"
+          gzip -d < /work/dev/db_seed/wordpress-initial.sql.gz | mysql --host=$DB_HOST --port=$DB_PORT -u root $DB_DATABASE
+        fi
+      fi
+
+  mysql: !Command
+    description: Run mysql client
+    container: app
+    run: "/usr/bin/mysql --host=$DB_HOST --port=$DB_PORT $DB_DATABASE"
+
+  logs: !Command
+    description: Shell access to logs
+    container: app
+    run: [ "/bin/sh" ]
+    work-dir: /var/log
+
+  yarn: !Command
+    description: Yarn
+    container: build
+    run: ["yarn", "--modules-folder=/usr/lib/node_modules"]
+
+  composer: !Command
+    description: WP-CLI
+    container: app
+    work-dir: /work
+    environ:
+      COMPOSER_HOME: /usr/local/lib/composer
+    run: ["composer"]
+
+  wp: !Command
+    description: WP-CLI
+    container: app
+    work-dir: /work
+    environ:
+      NO_COLOR: 1
+      TERM: xterm
+      PAGER: "busybox less"
+    run: ["wp", "--allow-root"]
+
+  test: !Command
+    description: test environment
+    container: app
+    work-dir: /work
+    environ:
+      NO_COLOR: 1
+      TERM: xterm
+      PAGER: "busybox less"
+    run: |
+      SKIP_DB_CREATE=true bash bin/install-wp-tests.sh wptester wptester wptester  127.0.0.1:3306 latest
+      exec /bin/sh

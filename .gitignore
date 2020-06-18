@@ -1,0 +1,5 @@
+node_modules
+.vagga
+.subversion
+.composer
+vendor

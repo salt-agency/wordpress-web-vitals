@@ -26,8 +26,9 @@ Web Vitals script can be either loaded from CDN or locally.
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/sa-webvitals` directory, or install the plugin through the WordPress plugins screen directly.
-1. Activate the plugin through the \'Plugins\' screen in WordPress
-2. Use the Settings->`Web Vitals` screen to configure the plugin
+2. Activate the plugin through the \'Plugins\' screen in WordPress
+3. Use the Settings->`Web Vitals` screen to configure the plugin
+4. Add Google Analytics Report to your GA Property - https://analytics.google.com/analytics/gallery/#posts/search/%3F_.tab%3DMy%26_.start%3D0%26_.viewId%3DdpAv7JWZQiKpz7TpABrcxg/
 
 == Changelog ==
 = 0.1.0 =

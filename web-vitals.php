@@ -20,7 +20,7 @@ require_once __DIR__ . '/includes/class-sa-webvitals.php';
 
 SA_WebVitals::init();
 
-if (is_admin()) {
-  require_once __DIR__ . '/includes/class-sa-webvitals-admin.php';
-  SA_WebVitals_Admin::init();
+if ( is_admin() ) {
+	require_once __DIR__ . '/includes/class-sa-webvitals-admin.php';
+	SA_WebVitals_Admin::init();
 }
