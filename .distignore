@@ -1,0 +1,16 @@
+.git
+.subversion
+.vagga
+.composer
+bin
+tests
+vendor
+.distignore
+.gitignore
+.phpcs.xml.dist
+.travis.yml
+composer.json
+composer.lock
+phpunit.xml.dist
+README.md
+vagga.yaml
