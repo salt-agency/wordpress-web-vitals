@@ -2,7 +2,8 @@
 Contributors: saltagency
 Tags: ga, analytics, tagmanager, gtag, performance, webvitals
 Requires at least: 5.0
-Requires PHP: 7.1
+Tested up to: 5.4
+Requires PHP: 7.0
 Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,3 +34,6 @@ Web Vitals script can be either loaded from CDN or locally.
 == Changelog ==
 = 0.1.0 =
 * First release
+
+= 0.1.1 =
+* Changed plugin filename to web-vitals.php to reflect https://wordpress.org/plugins/web-vitals/.
