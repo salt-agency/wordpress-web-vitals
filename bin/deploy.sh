@@ -81,6 +81,6 @@ svn status
 
 # Commit to SVN
 echo "➤ Committing files..."
-svn commit -m "Update to commit $TRAVIS_COMMIT from GitHub" --no-auth-cache --non-interactive  --username "$c" --password "$WP_ORG_PASSWORD"
+svn commit -m "Update to commit $TRAVIS_COMMIT from GitHub" --no-auth-cache --non-interactive  --username "$WP_ORG_USERNAME" --password "$WP_ORG_PASSWORD"
 
 echo "✓ Plugin deployed!"
