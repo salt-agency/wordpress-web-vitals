@@ -20,8 +20,6 @@ cache:
 matrix:
   include:
     - php: 7.4
-      env: WP_VERSION=latest
-    - php: 7.4
       env: WP_VERSION=5.3
     - php: 7.4
       env: WP_VERSION=5.2
@@ -31,6 +29,18 @@ matrix:
       env: WP_VERSION=latest
     - php: 7.2
       env: WP_VERSION=latest
+    - php: 7.4
+      env: WP_VERSION=latest
+      stage: deploy
+      deploy:
+        #
+        # Auto-deploys the built plugin to WordPress.org on push to master branch
+        #
+        provider: script
+        skip_cleanup: true
+        script: ./bin/deploy.sh
+        on:
+          branch: master    
     #- php: 7.4
     #  env: WP_TRAVISCI=phpcs
 
@@ -63,13 +73,3 @@ script:
     if [[ "$WP_TRAVISCI" == "phpcs" ]] ; then
       phpcs
     fi
-
-deploy:
-  #
-  # Auto-deploys the built plugin to WordPress.org on push to master branch
-  #
-  provider: script
-  skip_cleanup: true
-  script: ./bin/deploy.sh
-  on:
-    branch: master
