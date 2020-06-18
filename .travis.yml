@@ -1,7 +1,9 @@
 os: linux
 dist: xenial
-sudo: false
 language: php
+
+services:
+  - mysql
 
 notifications:
   email:
@@ -28,15 +30,13 @@ matrix:
       env: WP_VERSION=latest
     - php: 7.0
       env: WP_VERSION=latest
-    - php: 5.6
-      env: WP_VERSION=latest
-    - php: 7.2
+    - php: 7.4
       env: WP_VERSION=5.0
-    - php: 7.2
+    - php: 7.4
       env: WP_VERSION=5.1
-    - php: 7.2
+    - php: 7.4
       env: WP_VERSION=5.2
-    - php: 7.2
+    - php: 7.4
       env: WP_VERSION=5.3
     #- php: 5.6
     #  env: WP_TRAVISCI=phpcs
