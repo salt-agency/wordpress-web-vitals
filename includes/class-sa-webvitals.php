@@ -42,7 +42,7 @@ if ( ! class_exists( 'SA_WebVitals' ) ) {
 			$settings = static::get_settings();
 			if ( $settings['enabled'] ) {
 				if ( $settings['load'] === static::LOAD_CDN ) {
-					static::display_load_local_scripts();
+					static::display_load_cdn_scripts();
 					add_action( 'wp_footer', __CLASS__ . '::wp_footer', 20 );
 					
 				} else /* static::LOAD_LOCAL */ {
@@ -127,7 +127,7 @@ if ( ! class_exists( 'SA_WebVitals' ) ) {
 			  } else if (window.ga) {
 				sendto_<?php echo static::INTEGRATION_GA; ?>(vitals);
 			  } else {
-				consle.warn('WP WebVitals could not detect GA/GTAG/TagManager.');
+				console.warn('WP WebVitals could not detect GA/GTAG/TagManager.');
 			  }
 			};
 		  <?php endif; ?>

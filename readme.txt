@@ -37,3 +37,6 @@ Web Vitals script can be either loaded from CDN or locally.
 
 = 0.1.1 =
 * Changed plugin filename to web-vitals.php to reflect https://wordpress.org/plugins/web-vitals/.
+
+= 0.1.2 =
+* Fixed CDN loading

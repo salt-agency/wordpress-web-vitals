@@ -4,8 +4,8 @@
  * Plugin Name: Web Vitals
  * Plugin URI: https://wordpress.org/plugins/sa-webvitals
  * Description: Send Web Vitals to GA
- * Version: 0.1.0
- * Requires at least: 5.0
+ * Version: 0.1.2
+ * Requires at least: 5.1
  * Requires PHP:      7.2
  * Author: SALT.agency
  * Author URI: https://salt.agency
